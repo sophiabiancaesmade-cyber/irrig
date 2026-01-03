@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Irrigation – Get Started</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    .toggle {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: #60a5fa;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  text-decoration: underline;
+}
+    :root {
+      --bg: #020617;
+      --card: #0f172a;
+      --accent: #2dd4bf;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top, #0f172a, #020617),
+        repeating-radial-gradient(circle, #020617 0, #020617 2px, transparent 2px, transparent 6px);
+      color: var(--text);
+    }
+
+    /* Card */
+    .card {
+      width: 520px;
+      max-width: 90%;
+      background: linear-gradient(180deg, #0f172a, #020617);
+      border-radius: 22px;
+      padding: 48px 40px;
+      text-align: center;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.6),
+        inset 0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    .card h1 {
+      margin: 0 0 32px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* Button */
+    .btn {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      padding: 12px 28px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      color: #022c22;
+      box-shadow: 0 0 0 6px rgba(45,212,191,0.15);
+    }
+
+    .sub {
+      margin-top: 24px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    /* Modal */
+    .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(2,6,23,0.75);
+    display: none;
+    place-items: center;
+    backdrop-filter: blur(6px);
+    z-index: 999;
+    }
+
+    .modal.show {
+    display: grid;
+    }
+    /* Login Card */
+.login-card {
+  width: 90%;
+  max-width: 360px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.7);
+  text-align: center;
+}
+
+.login-card h2 {
+  margin-bottom: 20px;
+}
+
+/* Inputs */
+.login-card input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,0.2);
+  background: #020617;
+  color: #e5e7eb;
+  outline: none;
+}
+
+.login-card input:focus {
+  border-color: #2dd4bf;
+}
+
+/* Button */
+.btn.full {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Error */
+.error {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-top: 10px;
+}
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Smart Irrigation Canal System</h1>
+    <button class="btn" onclick="startApp()">Get Started</button>
+    <div class="sub">Monitor • Control • Optimize Water Flow</div>
+  </div>
+
+<div class="modal" id="authModal">
+  <div class="login-card">
+    <h2 id="formTitle">Login</h2>
+
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+
+    <button class="btn full" onclick="login()" id="loginBtn">Login</button>
+    <button class="btn full" onclick="signup()" id="signupBtn" style="display:none">
+      Sign Up
+    </button>
+
+    <p class="toggle" onclick="toggleForm()">No account? Sign up</p>
+    <p class="error" id="errorMsg"></p>
+  </div>
+</div>
+
+  <script>
+    function goNext() {
+      window.location.href = "index.html";
+    }
+  </script>
+  <script>
+  // Open modal
+  function startApp() {
+    document.getElementById("authModal").classList.add("show");
+  }
+
+  // Toggle Login / Signup
+  function toggleForm() {
+    const title = document.getElementById("formTitle");
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const toggleText = document.querySelector(".toggle");
+    const error = document.getElementById("errorMsg");
+
+    error.textContent = "";
+
+    if (title.textContent === "Login") {
+      title.textContent = "Sign Up";
+      loginBtn.style.display = "none";
+      signupBtn.style.display = "block";
+      toggleText.textContent = "Already have an account? Login";
+    } else {
+      title.textContent = "Login";
+      loginBtn.style.display = "block";
+      signupBtn.style.display = "none";
+      toggleText.textContent = "No account? Sign up";
+    }
+  }
+
+  // Signup
+  function signup() {
+    const user = username.value.trim();
+    const pass = password.value.trim();
+    const error = errorMsg;
+
+    if (!user || !pass) {
+      error.textContent = "All fields are required.";
+      return;
+    }
+
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    if (users.find(u => u.username === user)) {
+      error.textContent = "Username already exists.";
+      return;
+    }
+
+    users.push({ username: user, password: pass });
+    localStorage.setItem("users", JSON.stringify(users));
+
+    error.style.color = "#2dd4bf";
+    error.textContent = "Signup successful. You can login now.";
+
+    toggleForm();
+  }
+
+  // Login
+  function login() {
+    const user = username.value.trim();
+    const pass = password.value.trim();
+    const error = errorMsg;
+
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    const found = users.find(
+      u => u.username === user && u.password === pass
+    );
+
+    if (!found) {
+      error.textContent = "Invalid username or password.";
+      return;
+    }
+
+    localStorage.setItem("currentUser", user);
+    window.location.href = "index.html";
+  }
+</script>
+</body>
+</html>

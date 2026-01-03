@@ -3,218 +3,270 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Smart Irrigation Canal System — Demo</title>
+  <title>Smart Irrigation Canal System — Live Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
-      --bg:#0f1724; /* deep navy */
-      --card:#122033; /* card background */
+      --bg:#0f1724; 
+      --card:#122033; 
       --muted:#94a3b8;
-      --accent:#2dd4bf; /* teal */
-      --accent-2:#fb923c; /* orange */
+      --accent:#2dd4bf; 
+      --accent-2:#fb923c; 
       --glass: rgba(255,255,255,0.03);
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       color-scheme: dark;
     }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#081022 0%, #0b1530 100%);}
-    .wrap{max-width:1200px;margin:32px auto;padding:20px;display:grid;grid-template-columns:300px 1fr;gap:20px}
 
-    /* phone mockup */
-    .phone{background:linear-gradient(180deg,#071024,#0e2030);border-radius:24px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.6);}
-    .phone .screen{background:var(--card);border-radius:14px;padding:18px;color:#e6eef6}
-    .pill{height:6px;width:80px;background:rgba(255,255,255,0.06);border-radius:999px;margin-bottom:12px}
-    .row{display:flex;align-items:center;justify-content:space-between}
-    .small-gauge{display:flex;gap:12px;align-items:center}
-    .knob{width:72px;height:72px;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));display:grid;place-items:center;font-weight:700}
-    .muted{color:var(--muted);font-size:13px}
-    .btn{background:var(--accent);padding:8px 14px;border-radius:999px;color:#042024;font-weight:700;border:none;cursor:pointer}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#081022 0%, #0b1530 100%); overflow-x: hidden;}
 
-    /* main dashboard */
-    .board{background:transparent}
-    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 4px 18px rgba(4,9,22,0.6);}
-    .main-grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
-    .center-area{display:grid;grid-template-rows:auto 1fr;gap:16px}
-    .gauge-wrap{display:flex;align-items:center;gap:20px}
-    .gauge-card{flex:1;padding:20px;display:flex;align-items:center;justify-content:center}
-    .right-panel{display:flex;flex-direction:column;gap:12px}
+    /* Sidebar Drawer Logic */
+    .sidebar {
+      position: fixed;
+      left: -280px; /* Hidden by default */
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: linear-gradient(180deg,#071024,#0e2030);
+      z-index: 1000;
+      padding: 24px;
+      box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+      transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .sidebar.active { left: 0; }
 
-    .stats{display:flex;gap:12px}
-    .stat{background:var(--glass);padding:10px;border-radius:10px;min-width:80px;text-align:center}
+    .overlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(2px);
+      display: none;
+      z-index: 999;
+    }
+    .overlay.active { display: block; }
 
-    /* charts row */
-    .charts{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    /* Layout */
+    .wrap {
+      max-width: 1400px;
+      margin: 32px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 24px;
+    }
 
-    /* footer small text */
-    .small{font-size:13px;color:var(--muted)}
+    /* Animations */
+    .pulse {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 0 rgba(45, 212, 191, 0.4);
+      animation: pulse-ring 2s infinite;
+    }
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0px rgba(45, 212, 191, 0.7); }
+      100% { box-shadow: 0 0 0 10px rgba(45, 212, 191, 0); }
+    }
 
-    /* responsive */
-    @media (max-width:980px){.wrap{grid-template-columns:1fr;}.main-grid{grid-template-columns:1fr}.charts{grid-template-columns:1fr}}
+    .value-fade { transition: color 0.3s ease; }
+
+    /* UI Components */
+    .card{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+    .phone{background:linear-gradient(180deg,#071024,#0e2030);padding:18px;border-radius:32px;}
+    .screen{background:var(--card);border-radius:24px;padding:18px;min-height:300px;}
+    .pill{height:6px;width:60px;background:rgba(255,255,255,0.1);border-radius:999px;margin:0 auto 12px auto}
+    
+    .knob{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.03);display:grid;place-items:center;font-weight:700;border:1px solid rgba(255,255,255,0.1)}
+    .btn{background:var(--accent);padding:10px 18px;border-radius:12px;color:#042024;font-weight:700;border:none;cursor:pointer;transition:transform 0.2s;}
+    .btn:hover{transform:translateY(-2px); filter:brightness(1.1);}
+    
+    .side-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);color:#e6eef6;padding:12px;border-radius:12px;cursor:pointer;text-align:left;}
+    .side-btn:hover{background:var(--glass); border-color:var(--accent);}
+    .logout{margin-top:auto;color:#f87171;border-color:rgba(248,113,113,0.2);}
+
+    .main-grid{display:grid;grid-template-columns:1fr 320px;gap:20px}
+    .stat-box{background:var(--glass);padding:12px;border-radius:12px;text-align:center;flex:1}
+
+    @media (max-width:1000px){ .wrap{grid-template-columns: 1fr;} .phone{display:none;} }
   </style>
 </head>
 <body>
+
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar" id="accountSidebar">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <h3 style="margin:0">Account Settings</h3>
+      <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:20px; cursor:pointer">✕</button>
+    </div>
+    <div style="background:var(--glass); padding:16px; border-radius:12px; margin-top:10px">
+      <div class="small muted">Active Session</div>
+      <div style="font-weight:700; font-size:18px" id="sidebarUser">Admin User</div>
+    </div>
+    <button class="side-btn">👤 View Profile</button>
+    <button class="side-btn">⚙️ System Configuration</button>
+    <button class="side-btn">📊 Data Export</button>
+    <button class="side-btn logout" onclick="logout()">🚪 Sign Out</button>
+  </aside>
+
   <div class="wrap">
-    <!-- phone mockup -->
     <div class="phone card">
       <div class="screen">
         <div class="pill"></div>
-        <h3 style="margin:0 0 8px 0">Smart Irrigation System</h3>
-        <div class="row" style="margin-bottom:12px">
-          <div class="small-gauge">
-            <div class="knob">2.8m</div>
-            <div>
-              <div class="muted">Water Level</div>
-              <div style="font-weight:600">Normal</div>
-            </div>
-          </div>
-          <button class="btn">Pump On</button>
+        <h4 style="margin:0 0 16px 0">Mobile View</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+          <div class="knob" id="mobileKnob">2.80m</div>
+          <button class="btn" style="font-size:12px">Auto</button>
         </div>
-        <div style="height:90px;margin-top:6px">
-          <canvas id="miniLine" width="260" height="90"></canvas>
-        </div>
+        <canvas id="miniLine" height="120"></canvas>
       </div>
     </div>
 
-    <!-- main board -->
     <div class="board">
-      <div class="topbar">
-        <div style="display:flex;gap:12px;align-items:center">
-          <h2 style="margin:0;color:white">Smart Irrigation Canal System</h2>
-          <div class="small muted">Real-time water level</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px">
+        <div style="display:flex; align-items:center; gap:15px">
+          <button onclick="toggleSidebar()" class="btn" style="background:var(--glass); color:white; padding:8px 12px">☰ Menu</button>
+          <h2 style="margin:0">Canal Control Center</h2>
         </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <div class="small muted">Status: <strong style="color:var(--accent);margin-left:6px">Online</strong></div>
-          <div class="small muted">Last update: <strong>2m ago</strong></div>
+        <div class="small muted">
+          <span class="pulse"></span>Status: <strong style="color:var(--accent)">Live</strong>
         </div>
       </div>
 
       <div class="main-grid">
-        <div class="center-area">
-          <div class="card gauge-card" style="display:flex;flex-direction:column;align-items:center">
-            <!-- gauge: simple SVG dial -->
-            <svg id="gauge" width="340" height="190" viewBox="0 0 340 190" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
-              </defs>
-              <g transform="translate(170,170)">
-                <!-- background arc -->
-                <path d="M-140 0 A140 140 0 0 1 140 0" fill="none" stroke="#0b1220" stroke-width="28" stroke-linecap="round"></path>
-                <!-- active arc (will be masked by JS) -->
-                <path id="activeArc" d="M-140 0 A140 140 0 0 1 140 0" fill="none" stroke="url(#g1)" stroke-width="28" stroke-linecap="round" stroke-dasharray="880" stroke-dashoffset="440"></path>
-                <!-- center text -->
-                <text x="0" y="-10" font-size="28" text-anchor="middle" fill="#e6eef6" font-weight="700">2.8m</text>
-                <text x="0" y="20" font-size="14" text-anchor="middle" fill="#94a3b8">Current Level</text>
-              </g>
+        <div style="display:flex; flex-direction:column; gap:20px">
+          <div class="card" style="text-align:center">
+            <svg id="gauge" width="300" height="160" viewBox="0 0 340 190">
+              <path d="M-140 0 A140 140 0 0 1 140 0" transform="translate(170,170)" fill="none" stroke="#0b1220" stroke-width="28" stroke-linecap="round"></path>
+              <path id="activeArc" d="M-140 0 A140 140 0 0 1 140 0" transform="translate(170,170)" fill="none" stroke="url(#g1)" stroke-width="28" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="150"></path>
+              <defs><linearGradient id="g1"><stop offset="0%" stop-color="#2dd4bf"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient></defs>
+              <text id="gaugeVal" x="170" y="150" font-size="32" text-anchor="middle" fill="white" font-weight="700">2.80m</text>
             </svg>
-
-            <div style="display:flex;gap:14px;margin-top:12px;align-items:center">
-              <div class="stat">
+            
+            <div style="display:flex; gap:12px; margin-top:10px">
+              <div class="stat-box">
                 <div class="small muted">Temp</div>
-                <div style="font-weight:700">28°C</div>
+                <div id="liveTemp" style="font-weight:700">28.4°C</div>
               </div>
-              <div class="stat">
-                <div class="small muted">Flow</div>
-                <div style="font-weight:700">12 L/s</div>
+              <div class="stat-box">
+                <div class="small muted">Flow Rate</div>
+                <div id="liveFlow" style="font-weight:700">12.5 L/s</div>
               </div>
-              <div class="stat">
-                <div class="small muted">Status</div>
-                <div style="font-weight:700;color:var(--accent)">Normal</div>
+              <div class="stat-box">
+                <div class="small muted">Turbidity</div>
+                <div style="font-weight:700; color:var(--accent)">Clear</div>
               </div>
             </div>
-
           </div>
 
-          <div class="card" style="padding:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <div style="font-weight:700">Water Loss Trend (7 days)</div>
-              <div class="small muted">Last 24h</div>
-            </div>
+          <div class="card">
+            <div style="font-weight:700; margin-bottom:15px">Real-time Water Level Trend</div>
             <canvas id="lineChart" height="120"></canvas>
           </div>
-
         </div>
 
-        <div class="right-panel">
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <div style="font-weight:700">Recent Notifications</div>
-              <div class="small muted">3</div>
-            </div>
-            <ul style="padding:0;margin:0;list-style:none;display:flex;flex-direction:column;gap:8px">
-              <li class="small muted">Community advisory: check canal gate 4</li>
-              <li class="small muted">Reservoir refill complete</li>
-              <li class="small muted">Environmental: slight turbidity rise</li>
-            </ul>
+        <div style="display:flex; flex-direction:column; gap:20px">
+          <div class="card" style="flex:1">
+            <div style="font-weight:700; margin-bottom:12px">Notifications</div>
+            <div class="small muted" style="padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05)">✓ Gate 4 Calibration Complete</div>
+            <div class="small muted" style="padding-top:10px">! High inflow detected upstream</div>
           </div>
-
+          
           <div class="card">
-            <div style="font-weight:700;margin-bottom:8px">Water Flow Rate Data</div>
-            <canvas id="barChart" height="140"></canvas>
+            <div style="font-weight:700; margin-bottom:12px">Pump Control</div>
+            <button class="btn" id="pumpBtn" style="width:100%; margin-bottom:8px">Stop Pump</button>
+            <div class="small muted text-center">Current: <span id="pumpStatus" style="color:var(--accent)">Running</span></div>
           </div>
         </div>
       </div>
-
-      <div class="charts" style="margin-top:16px">
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div style="font-weight:700">Overview</div>
-            <div class="small muted">Summary</div>
-          </div>
-          <p class="small muted">This is a demo page.</p>
-        </div>
-
-        <div class="card" style="display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center">
-          <div style="font-weight:700">Quick Actions</div>
-          <button class="btn" id="actionToggle">Toggle Pump</button>
-          <div class="small muted" style="margin-top:6px">Pump status: <span id="pumpState">ON</span></div>
-        </div>
-      </div>
-
     </div>
   </div>
 
   <script>
-    // Simple helper to draw the gauge arc by adjusting strokeDashoffset
-    function setGauge(value, min=0, max=5){
-      // value in meters (0..5)
-      const arc = document.getElementById('activeArc');
-      const total = 880; // approximate length from viewBox
-      const pct = Math.max(0, Math.min(1,(value-min)/(max-min)));
-      const offset = total * (1 - pct) / 2; // because path is half-circle
-      arc.style.strokeDashoffset = String(440 - (pct * 440));
+    // 1. Sidebar Toggle
+    function toggleSidebar() {
+      document.getElementById('accountSidebar').classList.toggle('active');
+      document.getElementById('overlay').classList.toggle('active');
     }
-    setGauge(2.8, 0, 5);
 
-    // Chart: small mini line
+    function logout() {
+      alert("Logging out...");
+      window.location.href = "get-started.html";
+    }
+
+    // 2. Initialize Charts
     const miniCtx = document.getElementById('miniLine').getContext('2d');
-    const miniLine = new Chart(miniCtx,{
-      type:'line',data:{labels:['-6h','-5h','-4h','-3h','-2h','-1h','now'],datasets:[{data:[2.7,2.75,2.72,2.8,2.82,2.9,2.8],fill:true,tension:0.3}]},options:{plugins:{legend:{display:false}},elements:{point:{radius:0}},scales:{x:{display:false},y:{display:false}}}
+    const miniChart = new Chart(miniCtx, {
+      type: 'line',
+      data: { labels: ['', '', '', '', '', ''], datasets: [{ data: [2.8, 2.81, 2.79, 2.82, 2.8], borderColor: '#2dd4bf', tension: 0.4, borderWidth: 2, pointRadius: 0 }] },
+      options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
     });
 
-    // Line chart (water loss trend)
     const lineCtx = document.getElementById('lineChart').getContext('2d');
-    const lineChart = new Chart(lineCtx,{
-      type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Loss (m³)',data:[12,10,9,14,11,9,8],fill:true,tension:0.35}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}
+    const lineChart = new Chart(lineCtx, {
+      type: 'line',
+      data: { 
+        labels: ['10m', '8m', '6m', '4m', '2m', 'Now'], 
+        datasets: [{ label: 'Level', data: [2.75, 2.78, 2.8, 2.79, 2.81, 2.8], borderColor: '#60a5fa', fill: true, backgroundColor: 'rgba(96, 165, 250, 0.1)', tension: 0.3 }] 
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
     });
 
-    // Bar chart
-    const barCtx = document.getElementById('barChart').getContext('2d');
-    const barChart = new Chart(barCtx,{
-      type:'bar',data:{labels:['6AM','9AM','12PM','3PM','6PM','9PM'],datasets:[{label:'L/s',data:[8,12,10,14,9,6],barThickness:18}]},options:{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}
+    // 3. Live Movement Engine
+    function setGauge(val) {
+      const pct = (val - 0) / (5 - 0);
+      const offset = 440 - (pct * 440);
+      document.getElementById('activeArc').style.strokeDashoffset = offset;
+    }
+
+    function updateSensors() {
+      // Randomly fluctuate values
+      const level = (2.75 + Math.random() * 0.15).toFixed(2);
+      const temp = (28 + Math.random() * 0.8).toFixed(1);
+      const flow = (12 + Math.random() * 2).toFixed(1);
+
+      // Update UI Text
+      document.getElementById('gaugeVal').textContent = level + 'm';
+      document.getElementById('mobileKnob').textContent = level + 'm';
+      document.getElementById('liveTemp').textContent = temp + '°C';
+      document.getElementById('liveFlow').textContent = flow + ' L/s';
+
+      // Update Gauge SVG
+      setGauge(level);
+
+      // Update Main Chart
+      lineChart.data.datasets[0].data.shift();
+      lineChart.data.datasets[0].data.push(level);
+      lineChart.update('none');
+
+      // Update Mini Chart
+      miniChart.data.datasets[0].data.shift();
+      miniChart.data.datasets[0].data.push(level);
+      miniChart.update('none');
+    }
+
+    // Run update every 2.5 seconds
+    setInterval(updateSensors, 2500);
+
+    // 4. Pump Toggle Logic
+    const pumpBtn = document.getElementById('pumpBtn');
+    const pumpStatus = document.getElementById('pumpStatus');
+    let isRunning = true;
+
+    pumpBtn.addEventListener('click', () => {
+      isRunning = !isRunning;
+      pumpBtn.textContent = isRunning ? "Stop Pump" : "Start Pump";
+      pumpStatus.textContent = isRunning ? "Running" : "Idle";
+      pumpStatus.style.color = isRunning ? "var(--accent)" : "#f87171";
     });
 
-    // Pump toggle
-    const pumpState = document.getElementById('pumpState');
-    const actionBtn = document.getElementById('actionToggle');
-    let pumpOn = true;
-    actionBtn.addEventListener('click', ()=>{
-      pumpOn = !pumpOn;
-      pumpState.textContent = pumpOn? 'ON':'OFF';
-      actionBtn.textContent = pumpOn? 'Toggle Pump':'Toggle Pump';
-    });
   </script>
 </body>
 </html>
